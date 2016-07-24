@@ -106,11 +106,65 @@ class COD  {
     }
     
     function add_admin_assets($page) {
-        wp_register_style('cod_admin_css', $this->plugin_url . '/css/culture-object-display.css?nc='.time(), false, '1.0.0');
+        /*wp_register_style('cod_admin_css', $this->plugin_url . '/css/culture-object-display.css?nc='.time(), false, '1.0.0');
         wp_enqueue_style('cod_admin_css');
         wp_register_script('cod_admin_js', $this->plugin_url . '/js/culture-object-display.js?nc='.time(), array('jquery'), '1.0.0', true);
-        wp_enqueue_script('cod_admin_js');
+        wp_enqueue_script('cod_admin_js');*/
+        
+		add_action('media_buttons', array($this, 'add_cod_button'), 20);
+		add_action('admin_print_footer_scripts', array($this, 'add_mce_popup'));
     }
+    
+    function add_mce_popup() {
+        add_thickbox();
+        $cos = cos_get_instance();
+        
+        $provider = $cos->get_sync_provider();
+        if (!$provider) {
+            ?>
+            <div id="cod_media_link" style="display:none;">
+                <p>Sorry, your provider doesn't provide a list of fields it uses. We're working on automatically detecting this in the immediate future.</p>
+            </div>
+            <?php
+        } else {
+            if (!class_exists($provider['class'])) include_once($provider['file']);
+            $provider_class = new $provider['class'];
+            $fields = $provider_class->register_remappable_fields();
+
+		?>
+		<script>
+	        jQuery(document).on('click', '.add_field_name', function() {
+    	        val = '{{cos.field_name.'+jQuery('#add_field').val()+'}}';
+				window.send_to_editor(val);
+				self.parent.tb_remove();
+            });
+	        jQuery(document).on('click', '.add_field_value', function() {
+    	        val = '{{cos.field_value.'+jQuery('#add_field').val()+'}}';
+				window.send_to_editor(val);
+				self.parent.tb_remove();
+            });
+		</script>
+		
+		<div id="cod_media_link" style="display:none;">
+            <h2><?php esc_attr_e('Add Field', 'culture-object-display'); ?></h2>
+
+            <select name="add_field" id="add_field">
+                <?php foreach($fields as $key => $field) { ?>
+            	<option value="<?php echo $key; ?>"><?php echo $field; ?></option>
+            	<?php } ?>
+            </select><br />
+            
+            <a style="margin: 10px 10px 0 0;" href="#" class="button add_field_name" title="<?php esc_attr_e( 'Add Field Name', 'culture-object-display'); ?>"><div><?php esc_html_e('Add Field Name', 'culture-object-display'); ?></div></a>
+            <a style="margin-top: 10px" href="#" class="button add_field_value" title="<?php esc_attr_e( 'Add Field Value', 'culture-object-display'); ?>"><div><?php esc_html_e('Add Field Value', 'culture-object-display'); ?></div></a>
+        </div>
+
+	<?php
+        }
+	}
+    
+    function add_cod_button() {
+		echo '<a href="#TB_inline?width=600&height=300&inlineId=cod_media_link" class="button thickbox cod_media_link" id="add_cod" title="'.esc_attr__( 'Add Culture Object Field', 'culture-object-display' ).'"><div>'.esc_html__( 'Add Culture Object Field', 'culture-object-display' ).'</div></a>';
+	}
     
     function add_menu_page() {
         $display_page = add_submenu_page('cos_settings', __('Display Settings', 'culture-object-display'), __('Display Settings', 'culture-object-display'), 'administrator', 'cos_display_settings', array($this,'generate_display_page'));
