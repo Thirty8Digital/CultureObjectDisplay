@@ -22,6 +22,11 @@ class COD  {
     function provide_content($prev) {
         if (!is_main_query() || get_post_type() != "object" || stripos($prev, '{{cos.') === false) return $prev;
         
+        echo "<pre>";
+        var_dump(is_main_query());
+        var_dump(get_queried_object());
+        echo "</pre>";
+        
         if (is_archive()) {
             //We're in an archive page.
             $prev = $this->text_substitute(get_option('cod_archive'));
