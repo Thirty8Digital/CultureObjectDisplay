@@ -20,7 +20,7 @@ class COD  {
     }
     
     function provide_content($prev) {
-        if (!is_main_query() || get_post_type() != "object") return $prev;
+        if (!is_main_query() || get_post_type() != "object" || stripos($prev, '{{cos.') === false) return $prev;
         
         if (is_archive()) {
             //We're in an archive page.
