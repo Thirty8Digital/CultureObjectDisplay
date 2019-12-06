@@ -37,7 +37,7 @@ class COD  {
         $object_id = get_the_ID();
         
         $html = preg_replace_callback(
-            '/{{cos.field_name.([\w-_\ ]+)}}/',
+            '/{{cos.field_name.([\w\-_\ ]+)}}/',
             function ($matches) {
                 return cos_get_remapped_field_name($matches[1]);
             },
@@ -45,7 +45,7 @@ class COD  {
         );
         
         $html = preg_replace_callback(
-            '/{{cos.field_value.([\w-_\ ]+)}}/',
+            '/{{cos.field_value.([\w\-_\ ]+)}}/',
             function ($matches) {
                 return cos_get_field($matches[1]);
             },
