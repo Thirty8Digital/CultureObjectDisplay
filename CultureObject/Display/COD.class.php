@@ -2,62 +2,64 @@
 
 namespace CultureObject\Display;
 
-class COD  {
-    
+class COD {
+    private $plugin_directory;
+    private $plugin_url;
+
     function __construct() {
         $this->plugin_directory = realpath(__DIR__.'/../../');
         $this->plugin_url = plugins_url('/', __DIR__);
-        
+
         add_action('init', array($this, 'add_global_supports'), 11);
         add_action('admin_menu', array($this,'add_menu_page'), 11);
         add_action('admin_init', array($this,'register_settings'));
         add_filter('the_content', array($this, 'provide_content'), 1);
     }
-    
+
     function add_global_supports() {
         add_post_type_support('object', array('editor'));
         add_theme_support('cos-remaps');
     }
-    
+
     function provide_content($prev) {
-        if (!in_the_loop() || !is_main_query() || get_post_type() != "object") return $prev;
-        
+        if (!in_the_loop() || !is_main_query() || get_post_type() != "object") {
+            return $prev;
+        }
+
         if (is_archive()) {
-            //We're in an archive page.
             $prev = $this->text_substitute(get_option('cod_archive'));
         } else {
-            //We're in an single
             $prev = $this->text_substitute(get_option('cod_single'));
         }
-        
+
         return $prev;
     }
-    
+
     function text_substitute($html) {
-        $object_id = get_the_ID();
-        
+        $object_id = get_the_ID(); // Note: This variable is declared but never used
+
+        // Fixed regex patterns
         $html = preg_replace_callback(
-            '/{{cos.field_name.([\w-_\ ]+)}}/',
+            '/{{cos\.field_name\.([\w\-_ ]+)}}/',
             function ($matches) {
                 return cos_get_remapped_field_name($matches[1]);
             },
             $html
         );
-        
+
         $html = preg_replace_callback(
-            '/{{cos.field_value.([\w-_\ ]+)}}/',
+            '/{{cos\.field_value\.([\w\-_ ]+)}}/',
             function ($matches) {
                 return cos_get_field($matches[1]);
             },
             $html
         );
-        
+
         remove_filter('the_content', array($this, 'provide_content'), 1);
         $html = apply_filters('the_content', $html);
         add_filter('the_content', array($this, 'provide_content'), 1);
-        
+
         return $html;
-        
     }
     
     function print_filters_for( $hook = '' ) {
@@ -111,8 +113,8 @@ class COD  {
         wp_register_script('cod_admin_js', $this->plugin_url . '/js/culture-object-display.js?nc='.time(), array('jquery'), '1.0.0', true);
         wp_enqueue_script('cod_admin_js');*/
         
-		add_action('media_buttons', array($this, 'add_cod_button'), 20);
-		add_action('admin_print_footer_scripts', array($this, 'add_mce_popup'));
+        add_action('media_buttons', array($this, 'add_cod_button'), 20);
+        add_action('admin_print_footer_scripts', array($this, 'add_mce_popup'));
     }
     
     function add_mce_popup() {
@@ -131,40 +133,40 @@ class COD  {
             $provider_class = new $provider['class'];
             $fields = $provider_class->register_remappable_fields();
 
-		?>
-		<script>
-	        jQuery(document).on('click', '.add_field_name', function() {
-    	        val = '{{cos.field_name.'+jQuery('#add_field').val()+'}}';
-				window.send_to_editor(val);
-				self.parent.tb_remove();
+        ?>
+        <script>
+            jQuery(document).on('click', '.add_field_name', function() {
+                val = '{{cos.field_name.'+jQuery('#add_field').val()+'}}';
+                window.send_to_editor(val);
+                self.parent.tb_remove();
             });
-	        jQuery(document).on('click', '.add_field_value', function() {
-    	        val = '{{cos.field_value.'+jQuery('#add_field').val()+'}}';
-				window.send_to_editor(val);
-				self.parent.tb_remove();
+            jQuery(document).on('click', '.add_field_value', function() {
+                val = '{{cos.field_value.'+jQuery('#add_field').val()+'}}';
+                window.send_to_editor(val);
+                self.parent.tb_remove();
             });
-		</script>
-		
-		<div id="cod_media_link" style="display:none;">
+        </script>
+        
+        <div id="cod_media_link" style="display:none;">
             <h2><?php esc_attr_e('Add Field', 'culture-object-display'); ?></h2>
 
             <select name="add_field" id="add_field">
                 <?php foreach($fields as $key => $field) { ?>
-            	<option value="<?php echo $key; ?>"><?php echo $field; ?></option>
-            	<?php } ?>
+                <option value="<?php echo $key; ?>"><?php echo $field; ?></option>
+                <?php } ?>
             </select><br />
             
             <a style="margin: 10px 10px 0 0;" href="#" class="button add_field_name" title="<?php esc_attr_e( 'Add Field Name', 'culture-object-display'); ?>"><div><?php esc_html_e('Add Field Name', 'culture-object-display'); ?></div></a>
             <a style="margin-top: 10px" href="#" class="button add_field_value" title="<?php esc_attr_e( 'Add Field Value', 'culture-object-display'); ?>"><div><?php esc_html_e('Add Field Value', 'culture-object-display'); ?></div></a>
         </div>
 
-	<?php
+    <?php
         }
-	}
+    }
     
     function add_cod_button() {
-		echo '<a href="#TB_inline?width=600&height=300&inlineId=cod_media_link" class="button thickbox cod_media_link" id="add_cod" title="'.esc_attr__( 'Add Culture Object Field', 'culture-object-display' ).'"><div>'.esc_html__( 'Add Culture Object Field', 'culture-object-display' ).'</div></a>';
-	}
+        echo '<a href="#TB_inline?width=600&height=300&inlineId=cod_media_link" class="button thickbox cod_media_link" id="add_cod" title="'.esc_attr__( 'Add Culture Object Field', 'culture-object-display' ).'"><div>'.esc_html__( 'Add Culture Object Field', 'culture-object-display' ).'</div></a>';
+    }
     
     function add_menu_page() {
         $display_page = add_submenu_page('cos_settings', __('Display Settings', 'culture-object-display'), __('Display Settings', 'culture-object-display'), 'administrator', 'cos_display_settings', array($this,'generate_display_page'));
@@ -201,3 +203,4 @@ class COD  {
     }
 
 }
+?>
