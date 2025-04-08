@@ -59,13 +59,32 @@ class COD  {
         
         $all_meta = get_post_meta(get_the_ID());
         
-        
         if (isset($_GET['displayallmeta'])) {
-            
-            $html .= '<h2>All object metadata</h2>';
+            // Add the styles for the <pre> element
+            $html .= '<style>               
+                .allmeta { padding:20px; background-color:#f9f9f9;border:1px dotted #000000}
+                pre {
+                    background-color: #f4f4f4; 
+                    border: 1px solid #ddd;   
+                    padding: 10px;             
+                    font-family: "Courier New", Courier, monospace;
+                    font-size: 14px;           
+                    color: #333;               
+                    overflow-x: auto;          
+                    white-space: pre-wrap;     
+                    word-wrap: break-word;     
+                    border-radius: 5px;
+                }
+                
+            </style>';
+        
+            // Add heading and metadata dump to the HTML
+            $html .= '<div class="allmeta">';
+            $html .= '<h3>All object metadata</h3>';
             $html .= '<pre>';
             $html .= print_r($all_meta, true);  
             $html .= '</pre>';
+            $html .= '</div>';
         }
         
         return $html;
