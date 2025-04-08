@@ -56,6 +56,18 @@ class COD  {
         $html = apply_filters('the_content', $html);
         add_filter('the_content', array($this, 'provide_content'), 1);
         
+        
+        $all_meta = get_post_meta(get_the_ID());
+        
+        
+        if (isset($_GET['displayallmeta'])) {
+            
+            $html .= '<h2>All object metadata</h2>';
+            $html .= '<pre>';
+            $html .= print_r($all_meta, true);  
+            $html .= '</pre>';
+        }
+        
         return $html;
         
     }
